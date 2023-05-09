@@ -1,0 +1,4 @@
+GIT=http://git.denx.de/u-boot.git
+BRANCH=v2022.10
+COMMIT=4debc57a3da6c3f4d3f89a637e99206f4cea0a96
+VERSION=v2022.10
