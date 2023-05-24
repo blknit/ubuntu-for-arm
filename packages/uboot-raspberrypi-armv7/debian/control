@@ -1,0 +1,17 @@
+Source: uboot-raspberrypi-armv7
+Section: admin
+Priority: optional
+Standards-Version: 0.0.1
+Maintainer: Tongqing Liu <bknt814@gmail.com>
+Build-Depends: debhelper-compat (= 12), parted, gcc, make, bc, bison, python2, flex, device-tree-compiler, udev
+Homepage: http://git.denx.de/u-boot.git
+Vcs-Browser: http://git.denx.de/u-boot.git
+Vcs-Git: http://git.denx.de/u-boot.git
+
+Package: uboot-raspberrypi-armv7
+Architecture: armhf
+Priority: optional
+Provides: uboot-raspberrypi-armv7
+Replaces: uboot-raspberrypi-armv7
+Conflicts: uboot-raspberrypi-armv7
+Description: U-Boot for the Raspberry Pi 32bit armv7

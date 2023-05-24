@@ -11,7 +11,7 @@ This device is still new and undergoing continuous development. As a result, you
 * Package management via apt using the official Ubuntu repositories
 * Receive kernel, firmware, and bootloader updates through apt
 * Desktop first-run wizard for user setup and configuration
-* Uses the 5.15.92 Linux kernel
+* Uses the 5.15.84 Linux kernel
 
 ## Prepare an SD Card
 
@@ -46,10 +46,12 @@ To checkout the source and build:
 ```
 git clone https://github.com/blknit/ubuntu-for-arm.git
 cd ubuntu-for-arm
-# build for raspberry zero 2, 3b+, 4b
-sudo ./build.sh --board=raspberrypi-arm64
-# build for raspberry zero w
-sudo ./build.sh --board=raspberrypi-armhf
+# build 64bit ubuntu for raspberry zero 2, 3b+, 4b
+sudo ./build.sh --board=raspberrypi-armv8
+# build 32bit ubuntu for raspberry zero 2, 3b+, 4b
+sudo ./build.sh --board=raspberrypi-armv7
+# build 32bit ubuntu for raspberry zero
+sudo ./build.sh --board=raspberrypi-armv6
 # build for radxa zero
 sudo ./build.sh --board=radxa zero
 ```

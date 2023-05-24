@@ -1,0 +1,4 @@
+GIT=https://github.com/raspberrypi/linux.git
+BRANCH=1.20230306
+COMMIT=355bbe0f8114dcedd8ef5d9989a5c0f07301db9e
+VERSION=5.15.84-v7

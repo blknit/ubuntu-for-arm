@@ -1,0 +1,17 @@
+Source: uboot-raspberrypi-armv6
+Section: admin
+Priority: optional
+Standards-Version: 0.0.1
+Maintainer: Tongqing Liu <bknt814@gmail.com>
+Build-Depends: debhelper-compat (= 12), parted, gcc, make, bc, bison, python2, flex, device-tree-compiler, udev
+Homepage: http://git.denx.de/u-boot.git
+Vcs-Browser: http://git.denx.de/u-boot.git
+Vcs-Git: http://git.denx.de/u-boot.git
+
+Package: uboot-raspberrypi-armv6
+Architecture: armhf
+Priority: optional
+Provides: uboot-raspberrypi-armv6
+Replaces: uboot-raspberrypi-armv6
+Conflicts: uboot-raspberrypi-armv6
+Description: U-Boot for the Raspberry Pi 32bit armv6

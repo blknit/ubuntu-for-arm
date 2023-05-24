@@ -1,4 +1,4 @@
-linux-image-radxa-zero (5.15.84-v8+20230509) jammy; urgency=medium
+uboot-raspberrypi-armv6 (2022.10+20230509) jammy; urgency=medium
 
   * Initial packaging.
 
