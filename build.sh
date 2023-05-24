@@ -2,7 +2,7 @@
 
 set -eE 
 trap 'echo Error: in $0 on line $LINENO' ERR
-support_boards=(raspberrypi-armhf raspberrypi-arm64 radxa-zero)
+support_boards=(raspberrypi-armv6 raspberrypi-armv7 raspberrypi-armv8 radxa-zero)
 
 usage() {
 cat << HELPDOC

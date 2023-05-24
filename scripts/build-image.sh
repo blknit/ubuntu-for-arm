@@ -226,11 +226,11 @@ EOF
 fi
 
 # Copy uboot script
-cp ${mount_point}/writable/boot/boot.{cmd,scr} ${mount_point}/system-boot
+cp ${mount_point}/writable/boot/boot.cmd ${mount_point}/system-boot
+mkimage -A arm64 -O linux -T script -C none -n "Boot Script" -d "${mount_point}/system-boot/boot.cmd" "${mount_point}/system-boot/boot.scr"
 
 # Copy kernel and initrd to boot partition
-cp ${mount_point}/writable/boot/initrd.img-*-${BOARD} ${mount_point}/system-boot/initrd.img
-cp ${mount_point}/writable/boot/vmlinuz-*-${BOARD} ${mount_point}/system-boot/vmlinuz
+../scripts/${BOARD}/copy-kernel-to-image.sh ${mount_point}
 
 # Copy device trees to boot partition
 cp -r ${mount_point}/writable/boot/*.dtb ${mount_point}/system-boot
@@ -247,7 +247,7 @@ if [[ "${BOARD}" == radxa-zero ]]; then
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=1 count=444
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=512 skip=1 seek=1
 else
-    cp -r ${mount_point}/writable/boot/{bootcode.bin,cmdline.txt,config.txt,boot.cmd,boot.scr} ${mount_point}/system-boot
+    cp -r ${mount_point}/writable/boot/{bootcode.bin,cmdline.txt,config.txt} ${mount_point}/system-boot
     cp -r ${mount_point}/writable/boot/*.bin ${mount_point}/system-boot
     cp -r ${mount_point}/writable/boot/*.dat ${mount_point}/system-boot
     cp -r ${mount_point}/writable/boot/*.elf ${mount_point}/system-boot

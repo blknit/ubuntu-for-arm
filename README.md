@@ -46,10 +46,12 @@ To checkout the source and build:
 ```
 git clone https://github.com/blknit/ubuntu-for-arm.git
 cd ubuntu-for-arm
-# build for raspberry zero 2, 3b+, 4b
-sudo ./build.sh --board=raspberrypi-arm64
-# build for raspberry zero w
-sudo ./build.sh --board=raspberrypi-armhf
+# build 64bit ubuntu for raspberry zero 2, 3b+, 4b
+sudo ./build.sh --board=raspberrypi-armv8
+# build 32bit ubuntu for raspberry zero 2, 3b+, 4b
+sudo ./build.sh --board=raspberrypi-armv7
+# build 32bit ubuntu for raspberry zero
+sudo ./build.sh --board=raspberrypi-armv6
 # build for radxa zero
 sudo ./build.sh --board=radxa zero
 ```
