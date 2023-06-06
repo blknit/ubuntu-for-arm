@@ -48,6 +48,8 @@ fi
 cp firmware/*.dat ${chroot_dir}/boot/
 cp firmware/*.elf ${chroot_dir}/boot/
 cp firmware/bcm2708-*.dtb ${chroot_dir}/boot/
+cp firmware/bcm2710-*.dtb ${chroot_dir}/boot/
+cp firmware/bcm2711-*.dtb ${chroot_dir}/boot/
 cp firmware/bootcode.bin ${chroot_dir}/boot/
 cp -r firmware/overlays ${chroot_dir}/boot/
 
@@ -58,12 +60,28 @@ EOF
 # Setup config.txt file
 cat > ${chroot_dir}/boot/config.txt << EOF
 [pi0]
-kernel=vmlinuz
-initramfs initrd.img followkernel
+kernel=vmlinuz-v6
+initramfs initrd-v6.img followkernel
 
 [pi1]
-kernel=vmlinuz
-initramfs initrd.img followkernel
+kernel=vmlinuz-v6
+initramfs initrd-v6.img followkernel
+
+[pi2]
+kernel=vmlinuz-v7
+initramfs initrd-v7.img followkernel
+
+[pi3]
+kernel=vmlinuz-v7
+initramfs initrd-v7.img followkernel
+
+[pi02]
+kernel=vmlinuz-v7
+initramfs initrd-v7.img followkernel
+
+[pi4]
+kernel=vmlinuz-v7l
+initramfs initrd-v7l.img followkernel
 
 [all]
 # Enable the audio output, I2C and SPI interfaces on the GPIO header. As these
