@@ -11,15 +11,14 @@ if [[ -z ${BOARD} ]]; then
     exit 1
 fi
 
+if [ "${BOARD:0:11}" == "raspberrypi" ]; then
+    exit 0
+fi
+
 package_dir=uboot-${BOARD}
 source ../packages/"${package_dir}"/debian/upstream
 cp -r ../packages/"${package_dir}" .
 cd "${package_dir}"
-
-if [ "${BOARD}" == raspberrypi-armv6 ]; then
-    [ -d ../cross-pi-gcc-10.3.0-0 ] || wget -qO- --content-disposition -c  'https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry Pi GCC Cross-Compiler Toolchains/Bullseye/GCC 10.3.0/Raspberry Pi 1, Zero/cross-gcc-10.3.0-pi_0-1.tar.gz' | tar xvz -C ..
-    PATH=$(pwd)/../cross-pi-gcc-10.3.0-0/bin:$PATH 
-fi
 
 if [ ! -d .git ]; then
     git init

@@ -12,16 +12,11 @@ kernel_dir=../packages/linux-image-${BOARD}
 uboot_dir=../packages/uboot-${BOARD}
 
 export kernel_deb=$(cd ${kernel_dir}/debian; KDEB_PKGVERSION=$(dpkg-parsechangelog -SVersion -l changelog); source upstream; arch=$(cat arch); echo linux-image-${VERSION}-raspberrypi_${KDEB_PKGVERSION}_arm64.deb)
-export uboot_deb=$(cd ${uboot_dir}/debian; KDEB_PKGVERSION=$(dpkg-parsechangelog -SVersion -l changelog); arch=$(cat arch); echo uboot-raspberrypi-armv8_${KDEB_PKGVERSION}_arm64.deb)
 export kernel_version=$(echo ${kernel_deb} | cut -c 13- | cut -d'_' -f1)
 
 if [[ ${LAUNCHPAD} != "Y" ]]; then
     if [ ! -f "$kernel_deb" ]; then
         echo "Error: missing kernel debs(${kernel_deb}), please run build-kernel.sh"
-        exit 1
-    fi
-    if [ ! -f "$uboot_deb" ]; then
-        echo "Error: missing u-boot deb(${uboot_deb}), please run build-u-boot.sh"
         exit 1
     fi
 fi
@@ -39,9 +34,6 @@ function chroot_install_kernel_uboot {
     else
         cp ${kernel_deb} ${chroot_dir}/tmp
         chroot ${chroot_dir} /bin/bash -c "dpkg -i /tmp/${kernel_deb} && rm -rf /tmp/*"
-
-        cp ${uboot_deb} ${chroot_dir}/tmp
-        chroot ${chroot_dir} /bin/bash -c "dpkg -i /tmp/${uboot_deb} && rm -rf /tmp/*"
     fi
 
     cat << EOF | chroot ${chroot_dir} /bin/bash

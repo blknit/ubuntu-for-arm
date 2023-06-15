@@ -226,8 +226,10 @@ EOF
 fi
 
 # Copy uboot script
-cp ${mount_point}/writable/boot/boot.cmd ${mount_point}/system-boot
-mkimage -A arm64 -O linux -T script -C none -n "Boot Script" -d "${mount_point}/system-boot/boot.cmd" "${mount_point}/system-boot/boot.scr"
+if [ "${BOARD:0:11}" != "raspberrypi" ]; then
+    cp ${mount_point}/writable/boot/boot.cmd ${mount_point}/system-boot
+    mkimage -A arm64 -O linux -T script -C none -n "Boot Script" -d "${mount_point}/system-boot/boot.cmd" "${mount_point}/system-boot/boot.scr"
+fi
 
 # Copy kernel and initrd to boot partition
 ../scripts/${BOARD}/copy-kernel-to-image.sh ${mount_point}
