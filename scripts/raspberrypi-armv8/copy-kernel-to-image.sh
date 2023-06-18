@@ -10,5 +10,5 @@ fi
 
 mount_point=`readlink -f $@`
 
-cp ${mount_point}/writable/boot/initrd.img-*-v8-raspberrypi ${mount_point}/system-boot/initrd.img
-cp ${mount_point}/writable/boot/vmlinuz-*-v8-raspberrypi ${mount_point}/system-boot/vmlinuz
+cp ${mount_point}/writable/boot/initrd.img-*-v8-raspberrypi ${mount_point}/system-boot/initrd-v8.img
+cp ${mount_point}/writable/boot/vmlinuz-*-v8-raspberrypi ${mount_point}/system-boot/vmlinuz-v8
