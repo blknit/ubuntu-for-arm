@@ -38,16 +38,6 @@ apt-get -y install libegl-mesa0 libgbm1 mesa-utils \
 libgl1-mesa-dev libgl1-mesa-dri libglapi-mesa libglx-mesa0 libosmesa6 \
 mesa-opencl-icd mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers 
 
-# Remove cloud-init
-# apt-get -y purge cloud-init
-
-# Chromium uses fixed paths for libv4l2.so
-ln -rsf /usr/lib/*/libv4l2.so /usr/lib/
-[ -e /usr/lib/aarch64-linux-gnu/ ] && ln -Tsf lib /usr/lib64
-
-# Improve mesa performance 
-echo "PAN_MESA_DEBUG=gofaster" >> /etc/environment
-
 # Clean package cache
 apt-get -y autoremove && apt-get -y clean && apt-get -y autoclean
 EOF
