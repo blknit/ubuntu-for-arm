@@ -40,7 +40,7 @@ lshw lsof landscape-common exfat-fuse hwinfo net-tools wireless-tools pigz \
 openssh-client openssh-server wpasupplicant ifupdown wget curl lm-sensors \
 bluez gdisk usb-modeswitch usb-modeswitch-data make gcc libc6-dev bison \
 libssl-dev flex flash-kernel fake-hwclock rfkill libraspberrypi-bin \
-ubuntu-drivers-common
+ubuntu-drivers-common grub-common grub2-common grub-efi-arm64 grub-efi-arm64-bin
 
 # Remove cryptsetup and needrestart
 apt-get -y remove cryptsetup needrestart

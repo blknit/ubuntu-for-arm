@@ -20,7 +20,7 @@ if [ ! -f "${img}" ]; then
 fi
 
 cd "$(dirname -- "$(readlink -f -- "$0")")" && cd ..
-mkdir -p build && cd build && mkdir -p qemu
+mkdir -p build && cd build && mkdir -p qemu/mnts
 
 # Decompress xz archive
 filename="$(basename "${img}")"
@@ -65,53 +65,33 @@ if [ ${board} = "raspberrypi" ]; then
 
     elif [ ${arch} = "armv8" ]; then
 
-        # Resize image
-        qemu-img resize ${img} 16G
         # Setup block loop device
         loop="$(losetup -f)"
         losetup "${loop}" "${img}"
         partprobe "${loop}"
         # Mount loop device
-        mount_point=qemu/mnt
-        mkdir ${mount_point}
-        umount "${loop}"
-        mount "${loop}"p1 ${mount_point}
-        # Install grub
-        mkdir -p ${mount_point}/boot
-        grub-install --target=arm64-efi --efi-directory=${mount_point} --boot-directory=${mount_point}/boot --removable --recheck
-        # Grub config
-        cat > ${mount_point}/boot/boot/grub/grub.cfg << EOF
-insmod gzio
-set background_color=black
-set default=0
-set timeout=10
-GRUB_RECORDFAIL_TIMEOUT=
-menuentry 'Boot' {
-    search --no-floppy --label --set=root system-boot
-    linux /vmlinuz-v8 root=UUID=system-boot console=serial0,115200 console=tty1 rootfstype=ext4 rootwait rw
-    initrd /initrd-v8.img
-}
-EOF
+        mount_point=qemu/mnts
+        mkdir -p ${mount_point}/{boot,root}
+        umount ${loop}* 2> /dev/null || true
+        umount ${mount_point}/* 2> /dev/null || true
+        mount "${loop}"p1 ${mount_point}/boot
+        # copy kernel initrd dtb file
+        cp -r ${mount_point}/boot qemu/
         # clean
-        umount ${mount_point}
+        umount ${loop}* 2> /dev/null || true
+        umount ${mount_point}/* 2> /dev/null || true
         losetup -d ${loop}
-        
+
         qemu-system-aarch64 \
-        -smp 8 \
-        -m 4G \
-        -machine virt \
-        -cpu cortex-a57 \
-        -device qemu-xhci \
-        -device usb-kbd \
-        -device usb-mouse \
-        -device virtio-gpu-pci \
-        -device virtio-net-pci,netdev=vnet \
-        -device virtio-rng-pci,rng=rng0 \
-        -device virtio-blk,drive=drive0,bootindex=0 \
-        -netdev user,id=vnet,hostfwd=:127.0.0.1:0-:22 \
-        -object rng-random,filename=/dev/urandom,id=rng0 \
-        -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
-        -drive file="${img}",format=raw,if=none,id=drive0,cache=writeback
+        -smp 4 \
+        -m 1G \
+        -machine raspi3 \
+        -cpu cortex-a72 \
+        -dtb qemu/boot/bcm2710-rpi-3-b-plus.dtb \
+        -kernel qemu/boot/vmlinuz-v8 \
+        -initrd qemu/boot/initrd-v8.img \
+        -sd "${img}" \
+        -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1"
 
     fi
 fi
@@ -119,23 +99,52 @@ fi
 ############
 ## Method 1:
 
-# # UEFI firmware
-# if [ ! -f qemu/flash0.img ]; then
-#     dd if=/dev/zero of=qemu/flash0.img bs=1M count=64
-#     dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of=qemu/flash0.img conv=notrunc
-# fi
-
-# # UEFI variable store
-# if [ ! -f qemu/flash1.img ]; then
-#     dd if=/dev/zero of=qemu/flash1.img bs=1M count=64
-# fi
-
+#     # Resize image
+#     qemu-img resize ${img} 16G
+#     # Setup block loop device
+#     loop="$(losetup -f)"
+#     losetup "${loop}" "${img}"
+#     partprobe "${loop}"
+#     # Mount loop device
+#     mount_point=qemu/mnts
+#     mkdir -p ${mount_point}/{boot,root}
+#     umount ${loop}* 2> /dev/null || true
+#     umount ${mount_point}/* 2> /dev/null || true
+#     mount "${loop}"p1 ${mount_point}/boot
+#     mount "${loop}"p2 ${mount_point}/root
+#     # Extract grub arm64-efi to host system 
+#     if [ ! -d "/usr/lib/grub/arm64-efi" ]; then
+#         rm -f /usr/lib/grub/arm64-efi
+#         ln -s ${mount_point}/root/usr/lib/grub/arm64-efi /usr/lib/grub/arm64-efi
+#     fi
+#     # Install grub
+#     mkdir -p ${mount_point}/boot/efi/boot
+#     mkdir -p ${mount_point}/boot/boot/grub
+#     grub-install --target=arm64-efi --efi-directory=${mount_point}/boot --boot-directory=${mount_point}/boot/boot --removable --recheck
+#     # Grub config
+#     cat > ${mount_point}/boot/boot/grub/grub.cfg << EOF
+# insmod gzio
+# set background_color=black
+# set default=0
+# set timeout=10
+# GRUB_RECORDFAIL_TIMEOUT=
+# menuentry 'Boot' {
+# search --no-floppy --label --set=root system-boot
+# linux /vmlinuz-v8 root=LABEL=writable console=serial0,115200 console=tty1 rootfstype=ext4 rootwait rw
+# initrd /initrd-v8.img
+# }
+# EOF
+#     # clean
+#     umount ${loop}* 2> /dev/null || true
+#     umount ${mount_point}/* 2> /dev/null || true
+#     losetup -d ${loop}
+#
 # # For emulated VMs (e.g. x86 host)
 # qemu-system-aarch64 \
-# -smp 4 \
-# -m 4096M \
+# -smp 8 \
+# -m 4G \
 # -machine virt \
-# -cpu cortex-a57 \
+# -cpu cortex-a72 \
 # -device qemu-xhci \
 # -device usb-kbd \
 # -device usb-mouse \
