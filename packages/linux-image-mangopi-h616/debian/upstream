@@ -1,0 +1,4 @@
+GIT=https://github.com/torvalds/linux.git
+BRANCH=v6.1-rc8
+COMMIT=76dcd734eca23168cb008912c0f69ff408905235
+VERSION=6.0
