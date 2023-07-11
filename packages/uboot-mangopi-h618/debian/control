@@ -1,0 +1,17 @@
+Source: uboot-mangopi-h618
+Section: admin
+Priority: optional
+Standards-Version: 0.0.1
+Maintainer: Tongqing Liu <bknt814@gmail.com>
+Build-Depends: debhelper-compat (= 12), parted, gcc, make, bc, bison, python2, flex, device-tree-compiler, udev
+Homepage: https://source.denx.de/u-boot/u-boot.git
+Vcs-Browser: https://source.denx.de/u-boot/u-boot.git
+Vcs-Git: https://source.denx.de/u-boot/u-boot.git
+
+Package: uboot-mangopi-h618
+Architecture: arm64
+Priority: optional
+Provides: uboot-mangopi-h618
+Replaces: uboot-mangopi-h618
+Conflicts: uboot-mangopi-h618
+Description: U-Boot for the mangopi h618

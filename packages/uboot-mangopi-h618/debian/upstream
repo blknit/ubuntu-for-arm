@@ -1,0 +1,4 @@
+GIT=https://github.com/orangepi-xunlong/u-boot-orangepi.git
+BRANCH=v2021.07-sunxi
+COMMIT=10ae13dc295d2644b8b1eb50c84d609d5c62c202
+VERSION=v2021.07

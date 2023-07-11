@@ -250,7 +250,12 @@ if [[ "${BOARD}" == radxa-zero ]]; then
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=512 skip=1 seek=1
 elif [[ "${BOARD}" == mangopi-h616 ]]; then
     uboot=${mount_point}/writable/boot/u-boot-sunxi-with-spl.bin
-    dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=8K seek=1
+    dd if=/dev/zero of="${loop}" bs=1k count=1023 seek=1 status=noxfer
+    dd if=${uboot} of="${loop}" bs=1k seek=8 conv=fsync
+elif [[ "${BOARD}" == mangopi-h618 ]]; then
+    uboot=${mount_point}/writable/boot/u-boot-sunxi-with-spl.bin
+    dd if=/dev/zero of="${loop}" bs=1k count=1023 seek=1 status=noxfer
+    dd if=${uboot} of="${loop}" bs=1k seek=8 conv=fsync
 else
     cp -r ${mount_point}/writable/boot/{bootcode.bin,cmdline.txt,config.txt} ${mount_point}/system-boot
     cp -r ${mount_point}/writable/boot/*.bin ${mount_point}/system-boot
