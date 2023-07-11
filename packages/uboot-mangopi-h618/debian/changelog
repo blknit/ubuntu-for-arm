@@ -1,0 +1,5 @@
+uboot-mangopi-h618 (2021.07) jammy; urgency=medium
+
+  * Initial packaging.
+
+ -- Tongqing Liu <bknt814@gmail.com>  Tue, 25 Jun 2023 17:45:01 -0400

@@ -1,0 +1,4 @@
+GIT=https://github.com/orangepi-xunlong/linux-orangepi.git
+BRANCH=orange-pi-6.1-sun50iw9
+COMMIT=5ad66f8f01a41a54bcdee90053a7e0f444bca17c
+VERSION=6.1
