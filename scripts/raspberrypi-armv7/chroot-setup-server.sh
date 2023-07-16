@@ -71,6 +71,14 @@ cp ${overwrite_dir}/usr/lib/systemd/system/serial-getty@.service.d/10-term.conf 
 # Use gzip compression for the initrd
 cp ${overwrite_dir}/etc/initramfs-tools/conf.d/compression.conf ${chroot_dir}/etc/initramfs-tools/conf.d/compression.conf
 
+# Remove release upgrade motd
+rm -f ${chroot_dir}/var/lib/ubuntu-release-upgrader/release-upgrade-available
+cp ${overwrite_dir}/etc/update-manager/release-upgrades ${chroot_dir}/etc/update-manager/release-upgrades
+
+# Let systemd create machine id on first boot
+rm -f ${chroot_dir}/var/lib/dbus/machine-id
+true > ${chroot_dir}/etc/machine-id 
+
 # Board specific changes put here
 
 # Update initramfs
