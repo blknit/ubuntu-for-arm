@@ -79,6 +79,10 @@ cp ${overwrite_dir}/etc/update-manager/release-upgrades ${chroot_dir}/etc/update
 rm -f ${chroot_dir}/var/lib/dbus/machine-id
 true > ${chroot_dir}/etc/machine-id 
 
+# setup network
+cp ${overwrite_dir}/etc/netplan/50-cloud-init.yaml ${chroot_dir}/etc/netplan/50-cloud-init.yaml
+chroot ${chroot_dir} /bin/bash -c "systemctl start wpa_supplicant; netplan apply;"
+
 # Board specific changes put here
 
 # Update initramfs
