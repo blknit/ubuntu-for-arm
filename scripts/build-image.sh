@@ -248,6 +248,9 @@ if [[ "${BOARD}" == radxa-zero ]]; then
     # uboot=${mount_point}/writable/boot/u-boot.bin # boot from emmc
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=1 count=444
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=512 skip=1 seek=1
+elif [[ "${BOARD}" == mangopi-h616 ]]; then
+    uboot=${mount_point}/writable/boot/u-boot-sunxi-with-spl.bin
+    dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=8K seek=1
 else
     cp -r ${mount_point}/writable/boot/{bootcode.bin,cmdline.txt,config.txt} ${mount_point}/system-boot
     cp -r ${mount_point}/writable/boot/*.bin ${mount_point}/system-boot

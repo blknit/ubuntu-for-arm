@@ -1,0 +1,65 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/pkg-info.mk
+
+ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+CROSS_COMPILE ?= $(DEB_HOST_GNU_TYPE)-
+endif
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+NJOBS := -j $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+else
+NJOBS := -j $(shell nproc)
+endif
+
+mangopi-h616:
+	@mkdir -p debian/build/$@
+
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  ARCH=arm \
+	  $(NJOBS) \
+	  orangepi_zero2_defconfig
+
+	@./scripts/config --set-val CONFIG_AXP305_POWER n --set-val CONFIG_AXP1530_POWER y
+	@touch .scmversion
+	@sed -i 's/CONFIG_LOCALVERSION=""/CONFIG_LOCALVERSION="-mangopi-h616"/g' .config
+	@sed -i 's/CONFIG_DISABLE_CONSOLE=y/CONFIG_DISABLE_CONSOLE=n/g' .config
+
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  ARCH=arm \
+	  $(NJOBS) \
+	  BL31=./arm-trusted-firmware/build/sun50i_h616/release/bl31.bin -j$(nproc)
+
+trusted-firmware:
+	rm -rf arm-trusted-firmware
+	git clone https://github.com/ARM-software/arm-trusted-firmware.git
+	cd arm-trusted-firmware && make CROSS_COMPILE=$(CROSS_COMPILE) PLAT=sun50i_h616 bl31
+	
+build: trusted-firmware mangopi-h616
+
+binary-mangopi-h616:
+	rm -rf debian/build/boot
+	mkdir -m 755 -p debian/build/boot
+	cp u-boot.dtb debian/build/boot
+	cp u-boot-sunxi-with-spl.bin debian/build/boot
+	cp debian/boot.cmd debian/build/boot
+	mkimage -C none -A arm64 -T script -d debian/boot.cmd debian/build/boot/boot.scr
+
+	mkdir -m 755 -p "debian/build/DEBIAN"
+	mkdir -p "debian/build/usr/share/doc/uboot-mangopi-h616"
+	cp debian/copyright "debian/build/usr/share/doc/uboot-mangopi-h616/"
+	cp debian/changelog "debian/build/usr/share/doc/uboot-mangopi-h616/changelog.Debian"
+	gzip -f -9 "debian/build/usr/share/doc/uboot-mangopi-h616/changelog.Debian"
+	sh -c "cd 'debian/build'; find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -r0 md5sum > DEBIAN/md5sums"
+	chown -R root:root "debian/build" && chmod -R go-w "debian/build" && chmod -R a+rX "debian/build"
+	dpkg-gencontrol -puboot-mangopi-h616 -P"debian/build"
+	dpkg --build "debian/build" ..
+
+binary-arch: binary-mangopi-h616
+
+binary: binary-arch
+
+clean:
+	@rm -rf debian/*tmp debian/tmp debian/build debian/files
+	$(MAKE) clean
