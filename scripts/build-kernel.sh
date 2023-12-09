@@ -17,7 +17,7 @@ if [ "${BOARD}" == raspberrypi-armv6 ]; then
 fi
 
 if [ "${BOARD}" == raspberrypi-armv6 ]; then
-    package_dirs=linux-image-raspberrypi-armv6
+    package_dirs=(linux-image-raspberrypi-armv6 linux-image-raspberrypi-armv7 linux-image-raspberrypi-armv7l)
 elif [ "${BOARD}" == raspberrypi-armv7 ]; then
     package_dirs=(linux-image-raspberrypi-armv7 linux-image-raspberrypi-armv7l)
 elif [ "${BOARD}" == raspberrypi-armv8 ]; then
@@ -46,4 +46,8 @@ for package_dir in "${package_dirs[@]}"; do
     cd ..
 
     rm -f *.buildinfo *.changes linux-libc-dev*
+
+    unset PATH
+    source /etc/environment
+    export PATH
 done
