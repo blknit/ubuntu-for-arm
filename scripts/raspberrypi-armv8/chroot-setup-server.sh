@@ -79,9 +79,6 @@ cp ${overwrite_dir}/etc/update-manager/release-upgrades ${chroot_dir}/etc/update
 rm -f ${chroot_dir}/var/lib/dbus/machine-id
 true > ${chroot_dir}/etc/machine-id 
 
-# Fix Intel AX210 not working after linux-firmware update
-[ -e ${chroot_dir}/usr/lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm ] && mv ${chroot_dir}/usr/lib/firmware/iwlwifi-ty-a0-gf-a0.{pnvm,bak}
-
 # Board specific changes put here
 
 # Update initramfs
