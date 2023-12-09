@@ -1,0 +1,4 @@
+GIT=https://github.com/raspberrypi/linux.git
+BRANCH=rpi-5.15.y
+COMMIT=14b35093ca68bf2c81bbc90aace5007142b40b40
+VERSION=5.15.92-v6

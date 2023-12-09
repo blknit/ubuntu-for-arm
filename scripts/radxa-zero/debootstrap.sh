@@ -26,6 +26,7 @@ if [ -f ${chroot_dir}/var/log/bootstrap.log ]; then
 fi
 if [ $debootstrap -eq 1 ]; then
     debootstrap --arch ${arch} ${release} ${chroot_dir} ${mirror}
+    echo "0 added, 0 removed; done." >> ${chroot_dir}/var/log/bootstrap.log
 fi
 
 # Use a more complete sources.list file 
