@@ -42,9 +42,6 @@ cp ${overwrite_dir}/etc/profile.d/resize.sh ${chroot_dir}/etc/profile.d/resize.s
 # Enable rc-local
 cp ${overwrite_dir}/etc/rc.local ${chroot_dir}/etc/rc.local
 
-# Cloud init config
-cp ${overwrite_dir}/etc/cloud/cloud.cfg.d/99-fake_cloud.cfg ${chroot_dir}/etc/cloud/cloud.cfg.d/99-fake_cloud.cfg
-
 # Default adduser config
 cp ${overwrite_dir}/etc/adduser.conf ${chroot_dir}/etc/adduser.conf
 

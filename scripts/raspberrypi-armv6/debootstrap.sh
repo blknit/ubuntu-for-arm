@@ -129,4 +129,4 @@ dtoverlay=dwc2
 # hdmi_cvt 480 800 60 6 0 0 0
 EOF
 
-export DISTRO=debian
+export DISTRO=debian-11

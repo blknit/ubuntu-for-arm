@@ -33,17 +33,34 @@ apt-get -y update && apt-get -y install software-properties-common
 apt-get -y update && apt-get -y upgrade && apt-get -y dist-upgrade
 
 # Download and install generic packages
-apt-get -y install dmidecode mtd-tools i2c-tools cloud-init network-manager \
+apt-get -y install dmidecode network-manager flash-kernel bluez gdisk \
 bash-completion man-db manpages nano gnupg initramfs-tools fake-hwclock \
 dosfstools mtools parted ntfs-3g zip atop p7zip-full htop iotop pciutils \
-lshw lsof exfat-fuse hwinfo net-tools wireless-tools pigz rfkill libssl-dev \
-openssh-client openssh-server wpasupplicant ifupdown wget curl lm-sensors \
-bluez gdisk usb-modeswitch usb-modeswitch-data make gcc libc6-dev bison \
-flex flash-kernel
+lshw lsof exfat-fuse hwinfo net-tools wireless-tools pigz rfkill lm-sensors \
+openssh-client openssh-server wpasupplicant ifupdown wget curl usb-modeswitch \
+usb-modeswitch-data sudo iputils-ping net-tools
 
-# Remove cryptsetup and needrestart
-apt-get -y remove cryptsetup needrestart
+# Download and install developer packages
+# build-essential include make gcc g++ dpkg-dev libc6-dev
+DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+git binutils build-essential bc bison cmake flex libssl-dev device-tree-compiler \
+i2c-tools binfmt-support
 
 # Clean package cache
 apt-get -y autoremove && apt-get -y clean && apt-get -y autoclean
+
+# create user account
+set +e
+id -u pi >& /dev/null
+if [ \$? != "0" ]; then
+    adduser --shell /bin/bash --gecos "raspberry pi user" --disabled-password pi
+fi
+set -eE
+
+# setup user account
+usermod -a -G sudo,video,adm,dialout,cdrom,audio,plugdev pi
+mkdir -pm 700 /home/pi/.ssh
+chown -R pi:pi /home/pi
+echo -e "raspberry\nraspberry" | passwd pi
+
 EOF
