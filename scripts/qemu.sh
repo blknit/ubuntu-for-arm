@@ -36,32 +36,135 @@ if [ "${filename##*.}" != "img" ]; then
     exit 1
 fi
 
-# UEFI firmware
-if [ ! -f qemu/flash0.img ]; then
-    dd if=/dev/zero of=qemu/flash0.img bs=1M count=64
-    dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of=qemu/flash0.img conv=notrunc
+# Fetch arch and board
+desktop=$(echo ${filename} | awk -F- '{print $4}')
+board=$(echo ${filename} | awk -F- '{print $5}')
+arch=$(echo ${filename} | awk -F- '{print $6}' | awk -F. '{print $1}')
+
+# Setup kernel/initrd/devicetree
+if [ ${board} = "raspberrypi" ]; then
+    if [ ${arch} = "armv6" ] || [ ${arch} = "armv7" ]; then
+
+        # Prepare kernel/initrd/devicetree
+        if [ ! -d qemu/kernel ]; then
+            git clone --progress --depth=1 https://github.com/blknit/qemu-rpi-kernel.git ./qemu/kernel
+        fi
+
+        # Start qemu parameters (QEMU emulator version 4.2.1 (Debian 1:4.2-3ubuntu6.26))
+        qemu-system-arm \
+        -machine versatilepb \
+        -cpu arm1176 \
+        -m 256 \
+        -dtb qemu/kernel/versatile-pb-buster-5.4.51.dtb \
+        -kernel qemu/kernel/kernel-qemu-5.4.51-buster \
+        -append 'root=/dev/vda2 panic=1' \
+        -drive file="${img}",if=none,index=0,media=disk,format=raw,id=disk0 \
+        -device virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off \
+        -net user,hostfwd=tcp::5022-:22 \
+        -no-reboot 
+
+    elif [ ${arch} = "armv8" ]; then
+
+        # Resize image
+        qemu-img resize ${img} 16G
+        # Setup block loop device
+        loop="$(losetup -f)"
+        losetup "${loop}" "${img}"
+        partprobe "${loop}"
+        # Mount loop device
+        mount_point=qemu/mnt
+        mkdir ${mount_point}
+        umount "${loop}"
+        mount "${loop}"p1 ${mount_point}
+        # Install grub
+        mkdir -p ${mount_point}/boot
+        grub-install --target=arm64-efi --efi-directory=${mount_point} --boot-directory=${mount_point}/boot --removable --recheck
+        # Grub config
+        cat > ${mount_point}/boot/boot/grub/grub.cfg << EOF
+insmod gzio
+set background_color=black
+set default=0
+set timeout=10
+GRUB_RECORDFAIL_TIMEOUT=
+menuentry 'Boot' {
+    search --no-floppy --label --set=root system-boot
+    linux /vmlinuz-v8 root=UUID=system-boot console=serial0,115200 console=tty1 rootfstype=ext4 rootwait rw
+    initrd /initrd-v8.img
+}
+EOF
+        # clean
+        umount ${mount_point}
+        losetup -d ${loop}
+        
+        qemu-system-aarch64 \
+        -smp 8 \
+        -m 4G \
+        -machine virt \
+        -cpu cortex-a57 \
+        -device qemu-xhci \
+        -device usb-kbd \
+        -device usb-mouse \
+        -device virtio-gpu-pci \
+        -device virtio-net-pci,netdev=vnet \
+        -device virtio-rng-pci,rng=rng0 \
+        -device virtio-blk,drive=drive0,bootindex=0 \
+        -netdev user,id=vnet,hostfwd=:127.0.0.1:0-:22 \
+        -object rng-random,filename=/dev/urandom,id=rng0 \
+        -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
+        -drive file="${img}",format=raw,if=none,id=drive0,cache=writeback
+
+    fi
 fi
 
-# UEFI variable store
-if [ ! -f qemu/flash1.img ]; then
-    dd if=/dev/zero of=qemu/flash1.img bs=1M count=64
-fi
+############
+## Method 1:
 
-# For emulated VMs (e.g. x86 host)
-qemu-system-aarch64 \
--smp 4 \
--m 4096M \
--machine virt \
--cpu cortex-a57 \
--device qemu-xhci \
--device usb-kbd \
--device usb-mouse \
--device virtio-gpu-pci \
--device virtio-net-pci,netdev=vnet \
--device virtio-rng-pci,rng=rng0 \
--device virtio-blk,drive=drive0,bootindex=0 \
--netdev user,id=vnet,hostfwd=:127.0.0.1:0-:22 \
--object rng-random,filename=/dev/urandom,id=rng0 \
--drive file="${img}",format=raw,if=none,id=drive0,cache=writeback \
--drive file=qemu/flash0.img,format=raw,if=pflash \
--drive file=qemu/flash1.img,format=raw,if=pflash
+# # UEFI firmware
+# if [ ! -f qemu/flash0.img ]; then
+#     dd if=/dev/zero of=qemu/flash0.img bs=1M count=64
+#     dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of=qemu/flash0.img conv=notrunc
+# fi
+
+# # UEFI variable store
+# if [ ! -f qemu/flash1.img ]; then
+#     dd if=/dev/zero of=qemu/flash1.img bs=1M count=64
+# fi
+
+# # For emulated VMs (e.g. x86 host)
+# qemu-system-aarch64 \
+# -smp 4 \
+# -m 4096M \
+# -machine virt \
+# -cpu cortex-a57 \
+# -device qemu-xhci \
+# -device usb-kbd \
+# -device usb-mouse \
+# -device virtio-gpu-pci \
+# -device virtio-net-pci,netdev=vnet \
+# -device virtio-rng-pci,rng=rng0 \
+# -device virtio-blk,drive=drive0,bootindex=0 \
+# -netdev user,id=vnet,hostfwd=:127.0.0.1:0-:22 \
+# -object rng-random,filename=/dev/urandom,id=rng0 \
+# -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
+# -drive file="${img}",format=raw,if=none,id=drive0,cache=writeback
+
+############
+## Method 2:
+
+# require qemu verion 5.1+
+# https://www.qemu.org/docs/master/system/arm/raspi.html
+# raspi0 raspi1ap : ARM1176JZF-S core, 512 MiB of RAM
+# raspi2b  : Cortex-A7 (4 cores), 1 GiB of RAM
+# raspi3ap : Cortex-A53 (4 cores), 512 MiB of RAM
+# raspi3b  : Cortex-A53 (4 cores), 1 GiB of RAM
+# raspi4b2g  : Cortex-A72 (4 cores), 2 GiB of RAM
+
+# qemu-system-aarch64 \
+#    -machine raspi3b \
+#    -cpu cortex-a72 \
+#    -dtb boot/bcm2710-rpi-3-b-plus.dtb \
+#    -m 1G -smp 4 -serial stdio \
+#    -kernel ./kernel-v8 \
+#    -initrd boot/initrd-v8.img \
+#    -sd ../../images/ubuntu-22.04.2-preinstalled-desktop-raspberrypi-armv8.img,format=raw \
+#    -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1"
