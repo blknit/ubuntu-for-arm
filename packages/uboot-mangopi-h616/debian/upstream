@@ -1,0 +1,4 @@
+GIT=https://source.denx.de/u-boot/u-boot.git
+BRANCH=v2023.07-rc1
+COMMIT=6735ab59e6fd71ced1c58d8dfb3dd6baf3690d16
+VERSION=v2023.07-rc1
