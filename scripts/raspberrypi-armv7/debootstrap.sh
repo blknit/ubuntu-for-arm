@@ -160,25 +160,4 @@ dtoverlay=dwc2
 # hdmi_cvt 480 800 60 6 0 0 0
 EOF
 
-# Setup boot.cmd file
-cat > ${chroot_dir}/boot/boot.cmd << EOF
-# This is a boot script for U-Boot
-#
-# Recompile with:
-# mkimage -A arm -O linux -T script -C none -n "Boot Script" -d boot.cmd boot.scr
-
-echo "Boot script loaded from ${devtype} ${devnum}"
-
-if test -e ${devtype} ${devnum}:${distro_bootpart} /ubuntuEnv.txt; then
-	load ${devtype} ${devnum}:${distro_bootpart} ${load_addr} /ubuntuEnv.txt
-	env import -t ${load_addr} ${filesize}
-fi
-
-load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} /vmlinuz
-unzip ${ramdisk_addr_r} ${kernel_addr_r}
-load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} /initrd.img
-
-booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr}
-EOF
-
 export DISTRO=ubuntu-22.04.2

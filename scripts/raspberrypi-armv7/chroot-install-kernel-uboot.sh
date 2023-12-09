@@ -4,14 +4,12 @@ set -eE
 trap 'echo Error: in $0 on line $LINENO' ERR
 
 kernel_dirs=(../packages/linux-image-raspberrypi-armv7 ../packages/linux-image-raspberrypi-armv7l) 
-uboot_dir=../packages/uboot-raspberrypi-armv7
 
 for kernel_dir in ${kernel_dirs[@]}; do
     kernel_deb=$(cd ${kernel_dir}/debian; KDEB_PKGVERSION=$(dpkg-parsechangelog -SVersion -l changelog); source upstream; echo linux-image-${VERSION}-raspberrypi_${KDEB_PKGVERSION}_armhf.deb)
     export kernel_debs+=( ${kernel_deb} )
     export kernel_versions+=( $(echo ${kernel_deb} | cut -c 13- | cut -d'_' -f1) )
 done
-export uboot_deb=$(cd ${uboot_dir}/debian; KDEB_PKGVERSION=$(dpkg-parsechangelog -SVersion -l changelog); echo uboot-raspberrypi-armv7_${KDEB_PKGVERSION}_armhf.deb)
 
 if [[ ${LAUNCHPAD} != "Y" ]]; then
     for kernel_deb in ${kernel_debs[@]}; do
@@ -20,10 +18,6 @@ if [[ ${LAUNCHPAD} != "Y" ]]; then
             exit 1
         fi
     done
-    if [ ! -f "$uboot_deb" ]; then
-        echo "Error: missing u-boot deb(${uboot_deb}), please run build-u-boot.sh"
-        exit 1
-    fi
 fi
 
 function chroot_install_kernel_uboot {
@@ -35,14 +29,10 @@ function chroot_install_kernel_uboot {
     fi
 
     if [[ ${LAUNCHPAD}  == "Y" ]]; then
-        chroot ${chroot_dir} /bin/bash -c "apt-get -y install ${uboot_deb}"
         for kernel_deb in ${kernel_debs[@]}; do
             chroot ${chroot_dir} /bin/bash -c "apt-get -y install ${kernel_deb}"
         done
     else
-        cp ${uboot_deb} ${chroot_dir}/tmp
-        chroot ${chroot_dir} /bin/bash -c "dpkg -i /tmp/${uboot_deb} && rm -rf /tmp/*"
-
         for kernel_deb in ${kernel_debs[@]}; do
             cp ${kernel_deb} ${chroot_dir}/tmp
             chroot ${chroot_dir} /bin/bash -c "dpkg -i --force-overwrite /tmp/${kernel_deb} && rm -rf /tmp/*"
