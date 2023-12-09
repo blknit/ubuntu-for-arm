@@ -1,0 +1,4 @@
+GIT=https://github.com/radxa/u-boot.git
+BRANCH=radxa-zero-v2021.07
+COMMIT=db6738fed924d7febb8bac927e30526f81408eeb
+VERSION=radxa-zero-v2021.07

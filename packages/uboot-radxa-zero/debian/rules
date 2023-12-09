@@ -1,0 +1,66 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/pkg-info.mk
+
+ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+CROSS_COMPILE ?= $(DEB_HOST_GNU_TYPE)-
+endif
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+NJOBS := -j $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+else
+NJOBS := -j $(shell nproc)
+endif
+
+radxa-zero:
+	@mkdir -p debian/build/$@
+
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  ARCH=arm \
+	  $(NJOBS) \
+	  radxa-zero_defconfig
+
+	@touch .scmversion
+	@sed -i 's/CONFIG_LOCALVERSION=""/CONFIG_LOCALVERSION="-radxa-zero"/g' .config
+	@sed -i 's/CONFIG_DISABLE_CONSOLE=y/CONFIG_DISABLE_CONSOLE=n/g' .config
+	
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  SOURCE_DATE_EPOCH=$(shell date +%s) \
+	  ARCH=arm \
+	  $(NJOBS)
+
+firmware-in-package:
+	# FIP(Firmware in Package) is a collection of scripts and pre-built binaries (such as first stage loader and so on) for Radxa Zero U-Boot. Get them with following command:
+	rm -rf fip
+	git clone https://github.com/radxa/fip.git
+	cp u-boot.bin fip/radxa-zero/bl33.bin
+	cd fip/radxa-zero && make CROSS_COMPILE=$(CROSS_COMPILE)
+	
+build: radxa-zero firmware-in-package
+
+binary-radxa-zero:
+	rm -rf debian/build/boot
+	mkdir -m 755 -p debian/build/boot
+	cp fip/radxa-zero/u-boot.bin.sd.bin debian/build/boot  # u-boot for sd card
+	cp fip/radxa-zero/u-boot.bin debian/build/boot         # u-boot for usb or emmc
+	cp debian/boot.cmd debian/build/boot
+	mkimage -A arm64 -O linux -T script -C none -n "Boot Script" -d debian/build/boot/boot.cmd debian/build/boot/boot.scr
+
+	mkdir -m 755 -p "debian/build/DEBIAN"
+	mkdir -p "debian/build/usr/share/doc/uboot-radxa-zero"
+	cp debian/copyright "debian/build/usr/share/doc/uboot-radxa-zero/"
+	cp debian/changelog "debian/build/usr/share/doc/uboot-radxa-zero/changelog.Debian"
+	gzip -f -9 "debian/build/usr/share/doc/uboot-radxa-zero/changelog.Debian"
+	sh -c "cd 'debian/build'; find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -r0 md5sum > DEBIAN/md5sums"
+	chown -R root:root "debian/build" && chmod -R go-w "debian/build" && chmod -R a+rX "debian/build"
+	dpkg-gencontrol -puboot-radxa-zero -P"debian/build"
+	dpkg --build "debian/build" ..
+
+binary-arch: binary-radxa-zero
+
+binary: binary-arch
+
+clean:
+	@rm -rf debian/*tmp debian/tmp debian/build debian/files
+	$(MAKE) clean

@@ -1,0 +1,13 @@
+diff --git a/scripts/package/builddeb b/scripts/package/builddeb
+index 91a502bb97e8..0dd1e7b6becd 100755
+--- a/scripts/package/builddeb
++++ b/scripts/package/builddeb
+@@ -148,6 +148,8 @@ else
+ 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
+ fi
+ cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
++cp "$srctree/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dtb" "$tmpdir/boot"
++cp -Lr "$srctree/arch/arm64/boot/dts/amlogic/overlay" "$tmpdir/boot/overlays"
+ 
+ if is_enabled CONFIG_OF_EARLY_FLATTREE; then
+ 	# Only some architectures with OF support have this target
