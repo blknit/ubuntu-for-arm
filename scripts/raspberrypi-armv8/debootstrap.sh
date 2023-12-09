@@ -95,9 +95,9 @@ EOF
 # Setup config.txt file
 cat > ${chroot_dir}/boot/config.txt << EOF
 [all]
-kernel=vmlinuz
+kernel=vmlinuz-v8
 cmdline=cmdline.txt
-initramfs initrd.img followkernel
+initramfs initrd-v8.img followkernel
 
 [pi4]
 max_framebuffers=2

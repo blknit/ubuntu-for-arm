@@ -45,9 +45,9 @@ depmod -a ${kernel_version}
 
 # Create kernel and component symlinks
 cd /boot 
-rm -f initrd.img; ln -s initrd.img-${kernel_version} initrd.img
-rm -f System.map; ln -s System.map-${kernel_version} System.map
-rm -f vmlinuz; ln -s vmlinuz-${kernel_version} vmlinuz
-rm -f config; ln -s config-${kernel_version} config
+rm -f initrd-v8.img; ln -s initrd.img-${kernel_version} initrd-v8.img
+rm -f System-v8.map; ln -s System.map-${kernel_version} System-v8.map
+rm -f vmlinuz-v8; ln -s vmlinuz-${kernel_version} vmlinuz-v8
+rm -f config-v8; ln -s config-${kernel_version} config-v8
 EOF
 }
