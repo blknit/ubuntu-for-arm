@@ -1,0 +1,185 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/pkg-info.mk
+
+ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+CROSS_COMPILE ?= $(DEB_HOST_GNU_TYPE)-
+endif
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+NJOBS := -j $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+else
+NJOBS := -j $(shell nproc)
+endif
+
+SOC := rk3568
+
+BL31_VARIANT := set_pmic_sleep_low_20221018
+BL31 := 'find ./rkbin/bin | grep -e "${SOC}_bl31_${BL31_VARIANT}" | sort | tail -n 1'
+
+RKBIN_DDR := ${SOC}_ddr_1056MHz_v
+TPL := 'find ./rkbin/bin | grep "${RKBIN_DDR}" | sort | tail -n 1'
+
+radxa-zero3:
+	@mkdir -p debian/build/$@
+	BL31_FILE=$$( bash -c $(BL31) ) && TPL_FILE=$$( bash -c $(TPL) ) && bash -c \
+	"echo BL31_FILE=$$BL31_FILE && echo TPL_FILE=$$TPL_FILE && \
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  SOURCE_DATE_EPOCH=$(shell date +%s) \
+	  ARCH=arm \
+	  BL31=$$BL31_FILE \
+	  ROCKCHIP_TPL=$$TPL_FILE \
+	  $(NJOBS)"
+
+config:
+	@touch .scmversion
+	make CROSS_COMPILE=$(CROSS_COMPILE) \
+	  ARCH=arm \
+	  $(NJOBS) \
+	  radxa-zero3-rk3566_defconfig
+
+	## Normal U-Boot
+	@./scripts/config \
+	  --set-val CONFIG_BOOTDELAY 0 \
+	  --enable CONFIG_AUTOBOOT_KEYED \
+	  --enable CONFIG_AUTOBOOT_KEYED_CTRLC \
+	  --disable CONFIG_AUTOBOOT_FLUSH_STDIN \
+	  --disable CONFIG_AUTOBOOT_ENCRYPTION \
+	  --set-str CONFIG_AUTOBOOT_DELAY_STR "" \
+	  --set-str CONFIG_AUTOBOOT_STOP_STR "\x03" \
+	  --set-str CONFIG_AUTOBOOT_PROMPT "Hit Ctrl+C key in %d seconds to stop autoboot...\n"
+
+	## Boot related
+	@./scripts/config \
+	  --enable CONFIG_USE_PREBOOT \
+	  --enable CONFIG_PREBOOT_DEFINED \
+	  --set-str CONFIG_PREBOOT "usb start" \
+	  --set-str CONFIG_BOOTCOMMAND "bootflow scan; run distro_bootcmd; echo Boot failed. Reset in 3 seconds...; sleep 3; reset;"
+
+	## Enable USB keyboard
+	@./scripts/config \
+	  --enable CONFIG_SYS_STDIO_DEREGISTER \
+	  --enable CONFIG_USB_KEYBOARD \
+	  --enable CONFIG_USE_PREBOOT \
+	  --enable CONFIG_DM_KEYBOARD \
+	  --enable CONFIG_USB_KEYBOARD_FN_KEYS \
+	  --enable CONFIG_SYS_USB_EVENT_POLL \
+	  --disable CONFIG_SYS_USB_EVENT_POLL_VIA_INT_QUEUE \
+	  --disable CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP \
+	  --disable CONFIG_APPLE_SPI_KEYB \
+	  --disable CONFIG_BUTTON_KEYBOARD \
+	  --disable CONFIG_I8042_KEYB \
+	  --disable CONFIG_CMD_UMS_ABORT_KEYED \
+	  --set-str CONFIG_PREBOOT "usb start"
+
+	## Enable fastboot
+	@./scripts/config \
+      --enable CONFIG_USB_FUNCTION_FASTBOOT \
+	  --enable CONFIG_CMD_FASTBOOT \
+	  --enable CONFIG_FASTBOOT_FLASH \
+	  --enable CONFIG_FASTBOOT_FLASH_MMC \
+	  --enable CONFIG_FASTBOOT_MMC_BOOT_SUPPORT \
+	  --enable CONFIG_FASTBOOT_MMC_USER_SUPPORT \
+	  --set-str CONFIG_FASTBOOT_MMC_BOOT1_NAME "mmc0boot0" \
+	  --set-str CONFIG_FASTBOOT_MMC_BOOT2_NAME "mmc0boot1" \
+	  --set-str CONFIG_FASTBOOT_MMC_USER_NAME "mmc0" \
+	  --set-val CONFIG_FASTBOOT_BUF_ADDR 0x13000000 \
+	  --set-val CONFIG_FASTBOOT_FLASH_MMC_DEV 2
+
+	## Add partition table tools
+	@./scripts/config \
+	  --enable CONFIG_CMD_MBR \
+	  --enable CONFIG_CMD_GPT
+
+	## Enable fdt overlay
+	@./scripts/config \
+	  --enable CONFIG_OF_LIBFDT_OVERLAY
+
+	## Enable SPI boot
+	@./scripts/config \
+	  --enable CONFIG_ROCKCHIP_SPI \
+	  --enable CONFIG_SPI_BOOT \
+	  --enable CONFIG_SPI_FLASH_XTX \
+	  --enable CONFIG_SPI_FLASH_WINBOND \
+	  --enable CONFIG_SPL_SPI \
+	  --enable CONFIG_SPL_SPI_FLASH_SUPPORT \
+	  --enable CONFIG_SPL_SPI_SUPPORT \
+	  --enable CONFIG_SPL_SPI_LOAD
+
+	## Enable NVMe boot
+	@./scripts/config \
+	  --enable CONFIG_CMD_NVME
+
+	## Enable USB mass storage
+	@./scripts/config \
+	  --enable CONFIG_USB_GADGET \
+	  --enable CONFIG_USB_GADGET_DOWNLOAD \
+	  --enable CONFIG_CMD_USB_MASS_STORAGE \
+	  --enable CONFIG_USB_FUNCTION_MASS_STORAGE \
+	  --set-val CONFIG_USB_GADGET_PRODUCT_NUM 0x2200
+
+	## Enable hardware commands
+	@./scripts/config \
+	  --enable CONFIG_CMD_GPIO \
+	  --enable CONFIG_CMD_PWM \
+	  --enable CONFIG_CMD_GPIO_READ
+
+	## Enable LED support
+	@./scripts/config \
+	  --enable CONFIG_LED \
+	  --enable CONFIG_LED_GPIO \
+	  --enable CONFIG_CMD_LED \
+	  --disable CONFIG_LED_PWM \
+	  --disable CONFIG_LED_BLINK 
+
+	## Disable U-Boot logo
+	@./scripts/config \
+	  --disable CONFIG_VIDEO_LOGO
+
+	## Enable FAN53555
+	@./scripts/config \
+	  --enable CONFIG_CMD_PMIC \
+	  --enable CONFIG_CMD_REGULATOR \
+	  --enable CONFIG_DM_PMIC_FAN53555 \
+	  --enable CONFIG_DM_REGULATOR_FAN53555
+
+	## Enable HS200
+	@./scripts/config \
+	  --enable CONFIG_MMC_HS200_SUPPORT
+
+download-rkbin:
+	rm -rf rkbin && mkdir -p rkbin && cd rkbin && git init && git remote add rkbin https://github.com/radxa/rkbin.git && git fetch --depth 1 rkbin b0e55f98f0a8a5993cab9d81a40cf3c4255a34fb && git reset --hard FETCH_HEAD
+
+build: download-rkbin config radxa-zero3
+
+binary-radxa-zero3:
+	rm -f idbloader.img idbloader-spi.img idbloader-spi_spl.img
+	flash_data=$$( bash -c $(TPL) ) && flash_data=$${flash_data:+$${flash_data}:}spl/u-boot-spl.bin && \
+	tools/mkimage -n $(SOC) -T rksd -d "$${flash_data}" "idbloader.img"
+
+	rm -rf debian/build/boot
+	mkdir -m 755 -p debian/build/boot
+	cp idbloader.img debian/build/boot
+	cp u-boot-rockchip.bin debian/build/boot
+	cp u-boot.itb debian/build/boot
+	cp debian/boot.cmd debian/build/boot
+	mkimage -A arm64 -O linux -T script -C none -n "Boot Script" -d debian/build/boot/boot.cmd debian/build/boot/boot.scr
+
+	mkdir -m 755 -p "debian/build/DEBIAN"
+	mkdir -p "debian/build/usr/share/doc/uboot-radxa-zero3"
+	cp debian/copyright "debian/build/usr/share/doc/uboot-radxa-zero3/"
+	cp debian/changelog "debian/build/usr/share/doc/uboot-radxa-zero3/changelog.Debian"
+	gzip -f -9 "debian/build/usr/share/doc/uboot-radxa-zero3/changelog.Debian"
+	sh -c "cd 'debian/build'; find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -r0 md5sum > DEBIAN/md5sums"
+	chown -R root:root "debian/build" && chmod -R go-w "debian/build" && chmod -R a+rX "debian/build"
+	dpkg-gencontrol -puboot-radxa-zero3 -P"debian/build"
+	dpkg --build "debian/build" ..
+
+binary-arch: binary-radxa-zero3
+
+binary: binary-arch
+
+clean:
+	@rm -rf debian/*tmp debian/tmp debian/build debian/files
+	$(MAKE) clean

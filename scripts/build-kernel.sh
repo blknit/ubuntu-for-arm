@@ -26,16 +26,15 @@ else
     package_dirs=linux-image-${BOARD}
 fi
 
+source ../scripts/utils.sh
 for package_dir in "${package_dirs[@]}"; do
     source ../packages/"${package_dir}"/debian/upstream
-    cp -r ../packages/"${package_dir}" .
-
+    mkdir -p "${package_dir}"
     cd "${package_dir}"
+
     if [ ! -d .git ]; then
-        git init
-        git remote add origin "${GIT}"
-        git fetch --depth 1 origin "${COMMIT}"
-        git checkout FETCH_HEAD
+        git_source "${GIT}" "${COMMIT}"
+        cp -r ../../packages/"${package_dir}"/debian .
 
         # Apply all patches
         if [ -d "debian/patches" ]; then

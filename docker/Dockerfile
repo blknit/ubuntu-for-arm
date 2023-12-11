@@ -24,7 +24,11 @@ RUN apt-get update && apt-get install -y \
     parted \
     python-is-python3 \
     python2 \
+    python2-dev \
     python3 \
+    python3-dev \
+    python3-pyelftools \
+    python3-setuptools \
     qemu-efi \
     qemu-system-arm \
     qemu-user-static \
@@ -34,6 +38,8 @@ RUN apt-get update && apt-get install -y \
     uuid-runtime \
     xz-utils \
     curl \
+    swig \
+    && curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python2 && python2 -m pip install pyelftools==0.29 setuptools \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory

@@ -1,0 +1,17 @@
+Source: uboot-radxa-zero3
+Section: admin
+Priority: optional
+Standards-Version: 0.0.1
+Maintainer: Tongqing Liu <bknt814@gmail.com>
+Build-Depends: debhelper-compat (= 12), parted, gcc, make, bc, bison, python2, flex, device-tree-compiler, udev
+Homepage: https://github.com/radxa/u-boot.git
+Vcs-Browser: https://github.com/radxa/u-boot.git
+Vcs-Git: https://github.com/radxa/u-boot.git
+
+Package: uboot-radxa-zero3
+Architecture: arm64
+Priority: optional
+Provides: uboot-radxa-zero3
+Replaces: uboot-radxa-zero3
+Conflicts: uboot-radxa-zero3
+Description: U-Boot for the radxa zero3

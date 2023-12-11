@@ -244,10 +244,17 @@ fi
 
 # Write bootloader to disk image
 if [[ "${BOARD}" == radxa-zero ]]; then
+    echo "Building Rockchip radxa zero SPI U-Boot..."
     uboot=${mount_point}/writable/boot/u-boot.bin.sd.bin # boot from sd card
     # uboot=${mount_point}/writable/boot/u-boot.bin # boot from emmc
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=1 count=444
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=512 skip=1 seek=1
+elif [[ "${BOARD}" == radxa-zero3 ]]; then
+    echo "Building Rockchip RK35 radxa zero 3 SPI U-Boot..."
+    idbloader=${mount_point}/writable/boot/idbloader.img
+    uboot=${mount_point}/writable/boot/u-boot.itb
+    dd conv=notrunc,fsync if="${idbloader}" of="${loop}" bs=512 seek=64
+    dd conv=notrunc,fsync if="${uboot}" of="${loop}" bs=512 seek=16384
 elif [[ "${BOARD}" == mangopi-h616 ]]; then
     uboot=${mount_point}/writable/boot/u-boot-sunxi-with-spl.bin
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=8K seek=1
