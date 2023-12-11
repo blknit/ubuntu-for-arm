@@ -1,0 +1,13 @@
+flash emmc:
+rkdeveloptool db rkboot.bin # rkxx_loader_vx.xx.bin
+rkdeveloptool wl 0x40 idbloader.img
+rkdeveloptool wl 0x4000 u-boot.itb
+rkdeveloptool wl 0x8000 boot.img
+rkdeveloptool wl 0x40000 rootfs.img
+rkdeveloptool rd
+
+flash sdcard:
+dd if=idbloader.img of=sdb seek=64
+dd if=u-boot.itb of=sdb seek=16384
+dd if=boot.img of=sdb seek=32768
+dd if=rootfs.img of=sdb seek=262144

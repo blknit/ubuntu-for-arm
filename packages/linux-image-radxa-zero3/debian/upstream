@@ -1,0 +1,4 @@
+GIT=https://github.com/radxa/kernel.git
+BRANCH=linux-5.10-gen-rkr4.1
+COMMIT=66670945df741b375972a63e860186fdca62a3e1
+VERSION=5.10.160

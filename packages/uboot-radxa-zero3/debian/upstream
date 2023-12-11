@@ -1,0 +1,4 @@
+GIT=https://github.com/radxa/u-boot.git
+BRANCH=rk35xx-2024.01
+COMMIT=31b85240876dc43492b0826a74b99c23fbf6ed9d
+VERSION=rk35xx-2024.01

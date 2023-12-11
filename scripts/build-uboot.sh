@@ -15,16 +15,15 @@ if [ "${BOARD:0:11}" == "raspberrypi" ]; then
     exit 0
 fi
 
+source ../scripts/utils.sh
 package_dir=uboot-${BOARD}
 source ../packages/"${package_dir}"/debian/upstream
-cp -r ../packages/"${package_dir}" .
+mkdir -p "${package_dir}"
 cd "${package_dir}"
 
 if [ ! -d .git ]; then
-    git init
-    git remote add origin "${GIT}"
-    git fetch --depth 1 origin "${COMMIT}"
-    git checkout FETCH_HEAD
+    git_source "${GIT}" "${COMMIT}"
+    cp -r ../../packages/"${package_dir}"/debian .
 
     # Apply all patches
     if [ -d "debian/patches" ]; then

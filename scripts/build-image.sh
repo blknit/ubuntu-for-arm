@@ -52,7 +52,7 @@ if [[ -z ${BOARD} ]]; then
 fi
 
 # raspberrypi not support boot from GPT, so use MBR by default 
-# GPT=true
+GPT=true
 
 # Create an empty disk image
 img="../images/$(basename "${rootfs}" .rootfs.tar.xz).img"
@@ -128,10 +128,10 @@ if [ ! -z ${GPT} ]; then
 fdisk "${disk}" << EOF
 t
 1
-BC13C2FF-59E6-4262-A352-B275FD6F7172
+EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
 t
 2
-0FC63DAF-8483-4772-8E79-3D69D8477DE4
+C12A7328-F81F-11D2-BA4B-00A0C93EC93B
 w
 EOF
 else
@@ -244,10 +244,17 @@ fi
 
 # Write bootloader to disk image
 if [[ "${BOARD}" == radxa-zero ]]; then
+    echo "Building Rockchip radxa zero SPI U-Boot..."
     uboot=${mount_point}/writable/boot/u-boot.bin.sd.bin # boot from sd card
     # uboot=${mount_point}/writable/boot/u-boot.bin # boot from emmc
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=1 count=444
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=512 skip=1 seek=1
+elif [[ "${BOARD}" == radxa-zero3 ]]; then
+    echo "Building Rockchip RK35 radxa zero 3 SPI U-Boot..."
+    idbloader=${mount_point}/writable/boot/idbloader.img
+    uboot=${mount_point}/writable/boot/u-boot.itb
+    dd conv=notrunc,fsync if="${idbloader}" of="${loop}" bs=512 seek=64
+    dd conv=notrunc,fsync if="${uboot}" of="${loop}" bs=512 seek=16384
 elif [[ "${BOARD}" == mangopi-h616 ]]; then
     uboot=${mount_point}/writable/boot/u-boot-sunxi-with-spl.bin
     dd if=${uboot} of="${loop}" conv=fsync,notrunc bs=8K seek=1
