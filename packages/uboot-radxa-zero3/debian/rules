@@ -14,10 +14,10 @@ else
 NJOBS := -j $(shell nproc)
 endif
 
-SOC := rk3568
+SOC := rk3566
 
-BL31_VARIANT := v1.44
-BL31 := 'find ./rkbin/bin | grep -e "${SOC}_bl31_${BL31_VARIANT}" | sort | tail -n 1'
+BL31_VARIANT := rk3568_bl31_set_pmic_sleep_low_20221018
+BL31 := 'find ./rkbin/bin | grep -e "${BL31_VARIANT}" | sort | tail -n 1'
 
 RKBIN_DDR := ${SOC}_ddr_1056MHz_v
 TPL := 'find ./rkbin/bin | grep "${RKBIN_DDR}" | sort | tail -n 1'
@@ -150,7 +150,7 @@ config:
 	  --enable CONFIG_MMC_HS200_SUPPORT
 
 download-rkbin:
-	rm -rf rkbin && mkdir -p rkbin && cd rkbin && git init && git remote add rkbin https://github.com/radxa/rkbin.git && git fetch --depth 1 rkbin fc44f9401c127affb2a879c1e90fa89ddab505f6 && git reset --hard FETCH_HEAD
+	rm -rf rkbin && mkdir -p rkbin && cd rkbin && git init && git remote add rkbin https://github.com/radxa/rkbin.git && git fetch --depth 1 rkbin 5696fab20dcac57c1458f72dc7604ba60e553adf && git reset --hard FETCH_HEAD
 
 download-fip:
 	rm -rf fip && mkdir -p fip && cd fip && git init && git remote add fip https://github.com/radxa/fip.git && git fetch --depth 1 fip 3c5388e1c71cff35e78084b6dff623ff559ff81b && git reset --hard FETCH_HEAD
@@ -161,14 +161,15 @@ download-arm-trusted-firmware:
 build: download-rkbin config radxa-zero3
 
 binary-radxa-zero3:
-	rm -f idbloader.img idbloader-spi.img idbloader-spi_spl.img
+	rm -f idbloader.img idbloader-spi.img idbloader-spi_spl.img idbloader-sd_nand.img
 	flash_data=$$( bash -c $(TPL) ) && flash_data=$${flash_data:+$${flash_data}:}spl/u-boot-spl.bin && \
-	tools/mkimage -n $(SOC) -T rksd -d "$${flash_data}" "idbloader.img"
-	cd rkbin && tools/boot_merger RKBOOT/RK3568MINIALL.ini && cd ..
+	bash -c "echo flash_data=$$flash_data" && tools/mkimage -n rk3568 -T rksd -d "$${flash_data}" "idbloader.img"
+	
+	cd rkbin && tools/boot_merger RKBOOT/RK3566MINIALL.ini && cd ..
 
 	rm -rf debian/build/boot
 	mkdir -m 755 -p debian/build/boot
-	cp rkbin/*_spl_loader_*.bin debian/build/boot/rkboot.bin
+	mv rkbin/rk356x_spl_loader_v1.21.113.bin debian/build/boot/rkboot.bin
 	cp idbloader.img debian/build/boot
 	cp u-boot.itb debian/build/boot
 	cp debian/boot.cmd debian/build/boot
