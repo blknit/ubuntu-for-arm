@@ -17,10 +17,10 @@ endif
 SOC := rk3566
 
 BL31_VARIANT := rk3568_bl31_set_pmic_sleep_low_20221018
-BL31 := 'find ./rkbin/bin | grep -e "${BL31_VARIANT}" | sort | tail -n 1'
+BL31 := 'find ./rkbin/bin | grep -e "${BL31_VARIANT}" | sort | tail -n 1' # rk3568_bl31_set_pmic_sleep_low_20221018_v1.32.elf
 
 RKBIN_DDR := ${SOC}_ddr_1056MHz_v
-TPL := 'find ./rkbin/bin | grep "${RKBIN_DDR}" | sort | tail -n 1'
+TPL := 'find ./rkbin/bin | grep "${RKBIN_DDR}" | sort | tail -n 1' # rk3566_ddr_1056MHz_v1.21.bin
 
 radxa-zero3:
 	@mkdir -p debian/build/$@
@@ -162,6 +162,7 @@ build: download-rkbin config radxa-zero3
 
 binary-radxa-zero3:
 	rm -f idbloader.img idbloader-spi.img idbloader-spi_spl.img idbloader-sd_nand.img
+	# flash_data=/path/to/rkbin/bin/rk35/rk3566_ddr_1056MHz_v1.21.bin:/path/to/u-boot/spl/u-boot-spl.bin
 	flash_data=$$( bash -c $(TPL) ) && flash_data=$${flash_data:+$${flash_data}:}spl/u-boot-spl.bin && \
 	bash -c "echo flash_data=$$flash_data" && tools/mkimage -n rk3568 -T rksd -d "$${flash_data}" "idbloader.img"
 	
